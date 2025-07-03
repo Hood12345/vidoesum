@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.10-slim
 
 # Set working directory
 WORKDIR /app
@@ -12,7 +12,7 @@ RUN apt-get update && \
         curl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for Docker cache
+# Copy requirements file first (to leverage Docker caching)
 COPY requirements.txt .
 
 # Install Python dependencies
@@ -30,19 +30,19 @@ RUN useradd --create-home --shell /bin/bash app && \
 # Switch to non-root user
 USER app
 
-# Set environment
+# Set environment variables
 ENV FLASK_APP=app.py
 ENV FLASK_ENV=production
 ENV PYTHONPATH=/app
 
-# Healthcheck (optional)
+# Healthcheck endpoint
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl --fail http://localhost:5000/ping || exit 1
 
 # Expose port for Railway
 EXPOSE 5000
 
-# Run the app with Gunicorn (production WSGI server)
+# Run Flask app using Gunicorn
 CMD ["gunicorn", \
      "--bind", "0.0.0.0:5000", \
      "--workers", "2", \
